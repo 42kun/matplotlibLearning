@@ -7,51 +7,72 @@ import numpy as np
 plt.rcParams['font.sans-serif'] = ['Arial Unicode MS','SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 
-"""
-https://www.wxpython.org/Phoenix/docs/html/wx.GridBagSizer.html#wx-gridbagsizer
-https://www.wxpython.org/Phoenix/docs/html/wx.FlexGridSizer.html#wx.FlexGridSizer.AddGrowableCol
-"""
 class TestFrame(wx.Frame):
     #初始化各元素
     def __init__(self):
         wx.Frame.__init__(self,None,title = "测试程序")
         self.SetBackgroundColour("White")
-        self.AddMainElements()
 
-    #添加顶级元素
-    def AddMainElements(self):
         self.titlePanel = self.AddTitlePanel()
         self.graphPanel = graphPanel(self)
-        self.numberPanel = self.AddNumberPanel()
 
-        sizer = wx.GridBagSizer(10,5) #设置格子横竖边距
+        #设置GridBadSize尺寸器行列间隙
+        sizer = wx.GridBagSizer(5,15)
+
+        #将标题面板添加入尺寸器
+        self.titlePanel.SetMinSize((600,80))
+        sizer.Add(self.titlePanel,(0,0),(0,4),wx.EXPAND)
+        sizer.AddGrowableCol(0)
+        # sizer.AddGrowableCol(1)
+        # sizer.AddGrowableCol(2)
+        # sizer.AddGrowableCol(3)
+
+        #将图像面板添加入尺寸器
+        self.graphPanel.SetMinSize((600,350))
+        sizer.Add(self.graphPanel,(1,0),(3,4),wx.EXPAND)
+        sizer.AddGrowableRow(1)
+        sizer.AddGrowableRow(2)
+        sizer.AddGrowableRow(3)
+
+        #为Frame添加尺寸器，并根据组件大小适配Frame大小
+        self.SetSizerAndFit(sizer)
+
+        self.Center()
+
+
 
 
     #生成标题面板
     def AddTitlePanel(self):
-        #TODO:居中问题有待解决
         titlePanel = wx.Panel(self,name="titlePanel")
-        titlePanel.SetBackgroundColour("yellow") #TODO:带调试完成后删除此句
         title = wx.StaticText(titlePanel,label = "matplotlib嵌入wxpython演示",name = "title")
-        titleFont = wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.BOLD) #设置字体
+        titleFont = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.BOLD) #设置字体
         title.SetFont(titleFont)
-        return titlePanel
 
-    def AddNumberPanel(self):
-        numberPanel  = wx.Panel(self,name="numberPanel")
-        xText = wx.StaticText(numberPanel,label = "x",name = "xText")
-        xCtrl = wx.TextCtrl(numberPanel,style =  wx.TE_READONLY,name = "xCtrl")
-        yText = wx.StaticText(numberPanel, label="y",name = "yText")
-        yCtrl = wx.TextCtrl(numberPanel, style=wx.TE_READONLY ,name = "yCtrl")
-        return numberPanel
+        #设置标题居中（方法出自https://stackoverflow.com/questions/20737965/wxpython-how-do-i-center-a-static-size-panel）
+        sizer = wx.BoxSizer()
+        sizer.AddStretchSpacer(1)
+        sizer.Add(title,flag = wx.ALIGN_CENTER)
+        sizer.AddStretchSpacer(1)
+        titlePanel.SetSizer(sizer)
+
+        return titlePanel
 
 #生成图像面板
 class graphPanel(wx.Panel):
     def __init__(self,parent):
         wx.Panel.__init__(self,parent)
+        """self.matplotlibPanel完全继承自wx.Panel类，可以与Panel类一样的使用"""
         self.matplotlibPanel = backend_wxagg.FigureCanvasWxAgg(self, -1, Figure())
         self.drawGraph()
 
+        sizer = wx.BoxSizer()
+        sizer.AddStretchSpacer(1)
+        sizer.Add(self.matplotlibPanel,flag = wx.EXPAND)
+        sizer.AddStretchSpacer(1)
+        self.SetSizer(sizer)
+
+    #绘制函数图像
     def drawGraph(self):
         #获取figure
         fig = self.matplotlibPanel.figure
@@ -72,10 +93,6 @@ class graphPanel(wx.Panel):
 
         fig.suptitle("简单函数图像")
 
-#TODO 完成底部数值面板
-#TODO 获取数值
-#TODO 解决大小问题（理想情况下大小等块最好）
-#TODO 添加虚线与焦点数值
 
 if __name__ == "__main__":
     app = wx.App()
